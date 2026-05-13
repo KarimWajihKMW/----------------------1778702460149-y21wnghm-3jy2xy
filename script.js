@@ -8,14 +8,20 @@ const routes = {
   '/apps/customer/cart': () => renderAppPage('customer', 'cart'),
   '/apps/customer/tracking/live': () => renderAppPage('customer', 'tracking'),
   '/apps/customer/loyalty': () => renderAppPage('customer', 'loyalty'),
+  '/auth/customer/otp': () => renderOtpLogin('customer', 'phone'),
+  '/auth/customer/otp/verify': () => renderOtpLogin('customer', 'verify'),
   '/apps/restaurant': () => renderAppPage('restaurant', 'overview'),
   '/apps/restaurant/orders': () => renderAppPage('restaurant', 'orders'),
   '/apps/restaurant/menu-pricing': () => renderAppPage('restaurant', 'menu'),
   '/apps/restaurant/branches': () => renderAppPage('restaurant', 'branches'),
+  '/auth/restaurant/otp': () => renderOtpLogin('restaurant', 'phone'),
+  '/auth/restaurant/otp/verify': () => renderOtpLogin('restaurant', 'verify'),
   '/apps/driver': () => renderAppPage('driver', 'overview'),
   '/apps/driver/deliveries': () => renderAppPage('driver', 'deliveries'),
   '/apps/driver/map/live': () => renderAppPage('driver', 'map'),
   '/apps/driver/earnings': () => renderAppPage('driver', 'earnings'),
+  '/auth/driver/otp': () => renderOtpLogin('driver', 'phone'),
+  '/auth/driver/otp/verify': () => renderOtpLogin('driver', 'verify'),
   '/admin/overview': renderAdmin,
   '/admin/customers': () => renderAdmin('customers'),
   '/admin/drivers': () => renderAdmin('drivers'),
@@ -33,6 +39,7 @@ const platformData = {
     imageTitle: 'Order Flow',
     tabs: [
       { key: 'overview', path: '/apps/customer', label: 'نظرة عامة' },
+      { key: 'login', path: '/auth/customer/otp', label: 'دخول OTP' },
       { key: 'menu', path: '/apps/customer/menu', label: 'المنيو' },
       { key: 'cart', path: '/apps/customer/cart', label: 'السلة والدفع' },
       { key: 'tracking', path: '/apps/customer/tracking/live', label: 'التتبع الحي' },
@@ -63,6 +70,7 @@ const platformData = {
     imageTitle: 'Kitchen Command',
     tabs: [
       { key: 'overview', path: '/apps/restaurant', label: 'نظرة عامة' },
+      { key: 'login', path: '/auth/restaurant/otp', label: 'دخول OTP' },
       { key: 'orders', path: '/apps/restaurant/orders', label: 'الطلبات' },
       { key: 'menu', path: '/apps/restaurant/menu-pricing', label: 'المنيو والأسعار' },
       { key: 'branches', path: '/apps/restaurant/branches', label: 'الفروع' }
@@ -92,6 +100,7 @@ const platformData = {
     imageTitle: 'Rider Live GPS',
     tabs: [
       { key: 'overview', path: '/apps/driver', label: 'نظرة عامة' },
+      { key: 'login', path: '/auth/driver/otp', label: 'دخول OTP' },
       { key: 'deliveries', path: '/apps/driver/deliveries', label: 'طلبات التوصيل' },
       { key: 'map', path: '/apps/driver/map/live', label: 'الخريطة' },
       { key: 'earnings', path: '/apps/driver/earnings', label: 'الأرباح' }
@@ -119,6 +128,48 @@ const adminRows = [
   ['الأرباح', '284,900 ر.س', 'عمولة 14%', 'تقارير / تصدير / تسويات'],
   ['الكوبونات', '42 حملة', '8 نشطة', 'إنشاء / تعديل / إيقاف']
 ];
+
+const otpProfiles = {
+  customer: {
+    role: 'العميل',
+    title: 'دخول العميل برمز OTP',
+    subtitle: 'تجربة دخول سريعة بالجوال قبل تصفح المنيو، حفظ العناوين، الدفع، وتتبع الطلبات.',
+    icon: '📱',
+    accent: 'from-ember to-flame',
+    phonePath: '/auth/customer/otp',
+    verifyPath: '/auth/customer/otp/verify',
+    successPath: '/apps/customer/menu',
+    identifierLabel: 'رقم جوال العميل',
+    placeholder: '05xxxxxxxx',
+    trust: ['ربط تلقائي بسجل الطلبات', 'استرجاع السلة والعناوين', 'حماية الدفع والكوبونات']
+  },
+  restaurant: {
+    role: 'المطعم',
+    title: 'دخول المطعم برمز OTP',
+    subtitle: 'مصادقة آمنة لمدير الفرع أو الكاشير قبل استقبال الطلبات وإدارة المنيو والأسعار.',
+    icon: '🧑‍🍳',
+    accent: 'from-ketchup to-ember',
+    phonePath: '/auth/restaurant/otp',
+    verifyPath: '/auth/restaurant/otp/verify',
+    successPath: '/apps/restaurant/orders',
+    identifierLabel: 'جوال مسؤول المطعم',
+    placeholder: '05xxxxxxxx',
+    trust: ['صلاحيات حسب الفرع', 'تنبيه دخول جديد للإدارة', 'جلسة محمية لشاشة المطبخ']
+  },
+  driver: {
+    role: 'السائق',
+    title: 'دخول السائق برمز OTP',
+    subtitle: 'تسجيل دخول مخصص للسائق مع فحص الحالة، تفعيل الموقع، والوصول لطلبات التوصيل.',
+    icon: '🏍️',
+    accent: 'from-lettuce to-flame',
+    phonePath: '/auth/driver/otp',
+    verifyPath: '/auth/driver/otp/verify',
+    successPath: '/apps/driver/deliveries',
+    identifierLabel: 'رقم جوال السائق',
+    placeholder: '05xxxxxxxx',
+    trust: ['فحص اعتماد السائق', 'تفعيل GPS بعد الدخول', 'حماية الأرباح والمحفظة']
+  }
+};
 
 function navigate(path) {
   history.pushState({}, '', path);
@@ -266,6 +317,77 @@ function renderCrudTable(title) {
       <div class="mt-5 flex items-center justify-between text-sm"><span class="text-smoke/60">عرض 1-4 من 48</span><div class="flex gap-2"><button class="pager">السابق</button><button class="pager active">1</button><button class="pager">2</button><button class="pager">التالي</button></div></div>
     </div>
   `);
+}
+
+function renderOtpLogin(type, stage = 'phone') {
+  const profile = otpProfiles[type];
+  const isVerify = stage === 'verify';
+  const digits = ['4', '8', '2', '9'];
+  const steps = [
+    ['1', 'إدخال الجوال', !isVerify ? 'bg-ember text-white' : 'bg-lettuce text-white'],
+    ['2', 'التحقق من الرمز', isVerify ? 'bg-ember text-white' : 'bg-white/80 text-charcoal'],
+    ['3', `فتح شاشة ${profile.role}`, 'bg-white/80 text-charcoal']
+  ];
+
+  document.querySelector('#app').innerHTML = `
+    ${sectionShell(`
+      <div class="mb-6 flex flex-wrap items-center gap-2">
+        ${routeLink('/auth/customer/otp', 'OTP العميل', type === 'customer' ? 'bg-charcoal text-white shadow-panel' : 'bg-white/70 shadow-sm')}
+        ${routeLink('/auth/restaurant/otp', 'OTP المطعم', type === 'restaurant' ? 'bg-charcoal text-white shadow-panel' : 'bg-white/70 shadow-sm')}
+        ${routeLink('/auth/driver/otp', 'OTP السائق', type === 'driver' ? 'bg-charcoal text-white shadow-panel' : 'bg-white/70 shadow-sm')}
+      </div>
+      <div class="grid items-stretch gap-7 lg:grid-cols-[.92fr_1.08fr]">
+        <section class="reveal overflow-hidden rounded-[2.7rem] bg-charcoal p-6 text-white shadow-2xl">
+          <div class="relative min-h-full rounded-[2rem] bg-gradient-to-br ${profile.accent} p-6 shadow-fire">
+            <div class="absolute inset-0 opacity-20 grill-lines"></div>
+            <div class="relative">
+              <span class="grid h-16 w-16 place-items-center rounded-3xl bg-white/20 text-4xl backdrop-blur">${profile.icon}</span>
+              <p class="mt-8 font-extrabold text-white/80">شاشة مستقلة / مسار عميق</p>
+              <h1 class="mt-3 text-5xl font-black leading-tight">${profile.title}</h1>
+              <p class="mt-5 max-w-xl text-lg leading-9 text-white/82">${profile.subtitle}</p>
+              <div class="mt-8 grid gap-3 sm:grid-cols-3">
+                ${steps.map(([num, label, state]) => `<div class="rounded-3xl bg-white/16 p-4 backdrop-blur"><span class="grid h-10 w-10 place-items-center rounded-full ${state} font-latin font-black">${num}</span><p class="mt-3 text-sm font-extrabold">${label}</p></div>`).join('')}
+              </div>
+              <div class="mt-8 rounded-[2rem] bg-charcoal/25 p-4 backdrop-blur">
+                <p class="font-extrabold text-mustard">مسارات الشاشة</p>
+                <div class="mt-3 grid gap-2 text-sm text-white/80">
+                  <a href="${profile.phonePath}" data-route class="rounded-2xl bg-white/10 p-3 transition hover:bg-white/20">${profile.phonePath}</a>
+                  <a href="${profile.verifyPath}" data-route class="rounded-2xl bg-white/10 p-3 transition hover:bg-white/20">${profile.verifyPath}</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="reveal rounded-[2.7rem] border border-white/80 bg-white/78 p-5 shadow-panel backdrop-blur lg:p-7">
+          <div class="mx-auto max-w-xl rounded-[2.3rem] bg-bun p-4 shadow-inner">
+            <div class="rounded-[2rem] bg-white p-5 shadow-panel">
+              <div class="mb-5 flex items-center justify-between"><span class="font-latin font-extrabold">BurgerOS</span><span class="rounded-full bg-lettuce/15 px-3 py-1 text-xs font-extrabold text-lettuce">Secure OTP</span></div>
+              <div class="rounded-[1.7rem] bg-gradient-to-br ${profile.accent} p-5 text-white">
+                <span class="text-4xl">${profile.icon}</span>
+                <h2 class="mt-4 text-3xl font-black">${isVerify ? 'أدخل رمز التحقق' : profile.identifierLabel}</h2>
+                <p class="mt-2 text-sm leading-7 text-white/75">${isVerify ? 'أرسلنا رمزاً مؤقتاً صالحاً لمدة 60 ثانية إلى رقم الجوال المسجل.' : 'سيتم إرسال رمز تحقق مرة واحدة عبر SMS أو WhatsApp حسب إعدادات النظام.'}</p>
+              </div>
+              <form class="mt-5 grid gap-4">
+                ${isVerify ? `
+                  <div class="grid grid-cols-4 gap-3" dir="ltr">${digits.map(digit => `<input class="otp-digit" inputmode="numeric" maxlength="1" value="${digit}" aria-label="OTP digit ${digit}">`).join('')}</div>
+                  <div class="flex items-center justify-between rounded-2xl bg-bun px-4 py-3 text-sm font-extrabold"><span>ينتهي الرمز خلال 00:48</span><button type="button" class="text-ember">إعادة الإرسال</button></div>
+                ` : `
+                  <label class="grid gap-2 font-extrabold"><span>${profile.identifierLabel}</span><input class="form-input" inputmode="tel" placeholder="${profile.placeholder}" value="050 123 4567"></label>
+                  <label class="grid gap-2 font-extrabold"><span>قناة الإرسال</span><select class="form-input"><option>SMS</option><option>WhatsApp</option><option>مكالمة صوتية</option></select></label>
+                `}
+                <a href="${isVerify ? profile.successPath : profile.verifyPath}" data-route class="rounded-full bg-charcoal px-6 py-4 text-center font-extrabold text-white shadow-fire transition hover:-translate-y-1 hover:bg-ember focus:outline-none focus:ring-4 focus:ring-ember/30">${isVerify ? `الدخول إلى ${profile.role}` : 'إرسال رمز OTP'}</a>
+              </form>
+              <div class="mt-6 grid gap-3">
+                ${profile.trust.map(item => `<div class="flex items-center gap-3 rounded-2xl bg-bun p-3 text-sm font-extrabold"><span class="grid h-8 w-8 place-items-center rounded-full bg-lettuce text-white">✓</span>${item}</div>`).join('')}
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    `)}
+  `;
+  bindRouteLinks();
+  revealOnScroll();
 }
 
 function renderAdmin(active = 'overview') {
