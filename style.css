@@ -195,6 +195,27 @@ body {
   transform: translateY(-1px);
 }
 
+.otp-digit {
+  width: 100%;
+  border-radius: 1.25rem;
+  border: 2px solid rgba(23, 18, 15, .08);
+  background: rgba(255, 242, 216, .95);
+  padding: 1rem .4rem;
+  text-align: center;
+  font-family: Sora, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--charcoal);
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.otp-digit:focus {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 4px rgba(255, 75, 31, .16);
+  transform: translateY(-2px);
+}
+
 .reveal {
   opacity: 0;
   transform: translateY(26px) scale(.985);
